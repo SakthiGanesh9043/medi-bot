@@ -29,5 +29,7 @@ def text_split(minimal_docs):
 
 def download_embeddings():
     model_name = "sentence-transformers/all-MiniLM-L6-v2"
-    embeddings = HuggingFaceEmbeddings(model_name=model_name, model_kwargs={"device":"cuda" if torch.cuda.is_available() else "cpu"})
+    # embeddings = HuggingFaceEmbeddings(model_name=model_name, model_kwargs={"device":"cuda" if torch.cuda.is_available() else "cpu"})
+    embeddings = HuggingFaceEmbeddings(model_name=model_name,model_kwargs={"device":"cpu"})
     return embeddings
+
