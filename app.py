@@ -58,7 +58,6 @@ def chat():
 
 
 
-app = Flask(__name__)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
