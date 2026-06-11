@@ -80,70 +80,127 @@ print("STEP 7: Keys loaded")
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 
-print("STEP 8: Creating embeddings")
+# print("STEP 8: Creating embeddings")
 
-embedding = download_embeddings()
+# embedding = download_embeddings()
 
-print("STEP 9: Embeddings created")
+# print("STEP 9: Embeddings created")
 
-docsearch = PineconeVectorStore.from_existing_index(
-    index_name="medical-chatbot",
-    embedding=embedding
-)
+# docsearch = PineconeVectorStore.from_existing_index(
+#     index_name="medical-chatbot",
+#     embedding=embedding
+# )
 
-print("STEP 10: Pinecone connected")
+# print("STEP 10: Pinecone connected")
 
-retriever = docsearch.as_retriever(
-    search_type="similarity",
-    search_kwargs={"k": 3}
-)
+# retriever = docsearch.as_retriever(
+#     search_type="similarity",
+#     search_kwargs={"k": 3}
+# )
 
-print("STEP 11: Retriever created")
+# print("STEP 11: Retriever created")
 
-chatModel = ChatGroq(
-    model="llama-3.3-70b-versatile",
-    api_key=OPENAI_API_KEY,
-    temperature=0.2
-)
+# chatModel = ChatGroq(
+#     model="llama-3.3-70b-versatile",
+#     api_key=OPENAI_API_KEY,
+#     temperature=0.2
+# )
 
-print("STEP 12: Groq model created")
+# print("STEP 12: Groq model created")
 
-prompt = ChatPromptTemplate.from_messages(
-    [
-        ("system", system_prompt),
-        ("human", "{input}")
-    ]
-)
+# prompt = ChatPromptTemplate.from_messages(
+#     [
+#         ("system", system_prompt),
+#         ("human", "{input}")
+#     ]
+# )
 
-print("STEP 13: Prompt created")
+# print("STEP 13: Prompt created")
 
-question_answer_chain = create_stuff_documents_chain(
-    chatModel,
-    prompt
-)
+# question_answer_chain = create_stuff_documents_chain(
+#     chatModel,
+#     prompt
+# )
 
-print("STEP 14: QA chain created")
+# print("STEP 14: QA chain created")
 
-rag_chain = create_retrieval_chain(
-    retriever,
-    question_answer_chain
-)
+# rag_chain = create_retrieval_chain(
+#     retriever,
+#     question_answer_chain
+# )
 
-print("STEP 15: RAG chain created")
+# print("STEP 15: RAG chain created")
+
+rag_chain = None
+
+def get_rag_chain():
+    global rag_chain
+
+    if rag_chain is None:
+
+        print("Creating embeddings...")
+        embedding = download_embeddings()
+
+        print("Connecting Pinecone...")
+        docsearch = PineconeVectorStore.from_existing_index(
+            index_name="medical-chatbot",
+            embedding=embedding
+        )
+
+        retriever = docsearch.as_retriever(
+            search_type="similarity",
+            search_kwargs={"k": 3}
+        )
+
+        chatModel = ChatGroq(
+            model="llama-3.3-70b-versatile",
+            api_key=GROQ_API_KEY,
+            temperature=0.2
+        )
+
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", system_prompt),
+                ("human", "{input}")
+            ]
+        )
+
+        question_answer_chain = create_stuff_documents_chain(
+            chatModel,
+            prompt
+        )
+
+        rag_chain = create_retrieval_chain(
+            retriever,
+            question_answer_chain
+        )
+
+        print("RAG chain ready")
+
+    return rag_chain
 
 @app.route("/")
 def index():
     return render_template("chat.html")
 
-@app.route("/get",methods=["GET", "POST"])
+# @app.route("/get",methods=["GET", "POST"])
+# def chat():
+#     msg = request.form["msg"]
+#     input = msg
+#     print(input)
+#     response = rag_chain.invoke({"input": msg})
+#     print("Response: ", response["answer"])
+#     return str(response["answer"])
+
+@app.route("/get", methods=["GET", "POST"])
 def chat():
     msg = request.form["msg"]
-    input = msg
-    print(input)
-    response = rag_chain.invoke({"input": msg})
-    print("Response: ", response["answer"])
-    return str(response["answer"])
 
+    chain = get_rag_chain()
+
+    response = chain.invoke({"input": msg})
+
+    return str(response["answer"])
 
 
 
