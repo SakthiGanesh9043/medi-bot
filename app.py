@@ -154,7 +154,7 @@ def get_rag_chain():
 
         chatModel = ChatGroq(
             model="llama-3.3-70b-versatile",
-            api_key=GROQ_API_KEY,
+            api_key=OPENAI_API_KEY,
             temperature=0.2
         )
 
